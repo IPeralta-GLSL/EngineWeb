@@ -1,12 +1,11 @@
 import React, { useRef, useEffect, useCallback } from 'react'
-import { Canvas, useThree, useFrame } from '@react-three/fiber'
-import { Sky, OrbitControls, TransformControls, Edges } from '@react-three/drei'
+import { Canvas, useThree } from '@react-three/fiber'
+import { Sky, TransformControls, Edges } from '@react-three/drei'
 import * as THREE from 'three'
 import useEditorStore from '../store/editorStore'
-import ThirdPersonController from './ThirdPersonController'
+import CameraController from './CameraController'
 
 function SpawnObject({ obj }) {
-  const meshRef = useRef()
   const mode = useEditorStore((s) => s.mode)
   const selectedObjectId = useEditorStore((s) => s.selectedObjectId)
   const selectObject = useEditorStore((s) => s.selectObject)
@@ -20,17 +19,9 @@ function SpawnObject({ obj }) {
     [mode, obj.id, selectObject]
   )
 
-  useEffect(() => {
-    if (meshRef.current) {
-      meshRef.current.position.set(...obj.position)
-    }
-  }, [obj.position])
-
-  const ref = useRef()
-
   return (
     <group position={obj.position} onClick={handleClick}>
-      <mesh ref={ref} rotation={[-Math.PI / 2, 0, 0]}>
+      <mesh rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[0.3, 0.5, 32]} />
         <meshBasicMaterial
           color={obj.color}
@@ -257,22 +248,6 @@ function TransformControlsWrapper({ meshRef, mode, obj, updateObject, children }
   )
 }
 
-function SpawnMarker() {
-  const mode = useEditorStore((s) => s.mode)
-  const getSpawnPosition = useEditorStore((s) => s.getSpawnPosition)
-  const selectObject = useEditorStore((s) => s.selectObject)
-  const selectedObjectId = useEditorStore((s) => s.selectedObjectId)
-  const spawn = useEditorStore((s) => s.sceneObjects.find((o) => o.type === 'spawn'))
-
-  if (!spawn) return null
-
-  const isSelected = selectedObjectId === spawn.id
-
-  return (
-    <SpawnObject obj={spawn} />
-  )
-}
-
 function LightRenderers() {
   const sceneObjects = useEditorStore((s) => s.sceneObjects)
 
@@ -305,30 +280,12 @@ function SceneObjects() {
   return (
     <>
       {sceneObjects.map((obj) => {
-        if (obj.type === 'spawn') return null
+        if (obj.type === 'spawn') return <SpawnObject key={obj.id} obj={obj} />
         if (obj.type === 'directionalLight') return null
         if (obj.type === 'pointLight') return null
         return <SceneObject key={obj.id} obj={obj} />
       })}
     </>
-  )
-}
-
-function EditorCamera() {
-  const mode = useEditorStore((s) => s.mode)
-  if (mode !== 'edit') return null
-  return (
-    <OrbitControls
-      makeDefault
-      enablePan={true}
-      enableRotate={true}
-      enableZoom={true}
-      mouseButtons={{
-        LEFT: THREE.MOUSE.PAN,
-        MIDDLE: THREE.MOUSE.DOLLY,
-        RIGHT: THREE.MOUSE.ROTATE,
-      }}
-    />
   )
 }
 
@@ -365,8 +322,6 @@ function DropHandler() {
     e.preventDefault()
   }, [])
 
-  const canvasRef = useRef()
-
   useEffect(() => {
     const canvas = document.querySelector('.viewport canvas')
     if (!canvas) return
@@ -395,17 +350,10 @@ function SceneContent() {
       />
       <SceneObjects />
       <LightRenderers />
-      <SpawnMarker />
-      <GizmoManager />
-      <ThirdPersonController />
-      <EditorCamera />
+      <CameraController />
       <DropHandler />
     </>
   )
-}
-
-function GizmoManager() {
-  return null
 }
 
 export default function Scene() {
