@@ -460,3 +460,134 @@ body {
 .panel {
   animation: fadeIn 0.2s ease;
 }
+
+.hint-small {
+  font-size: 11px;
+  color: #505050;
+  text-align: center;
+}
+
+.add-panel {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  z-index: 100;
+}
+
+.add-panel-toggle {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 120, 255, 0.85);
+  backdrop-filter: blur(8px);
+  color: #ffffff;
+  font-size: 28px;
+  font-weight: 300;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.add-panel-toggle:hover {
+  background: rgba(0, 100, 255, 1);
+  transform: scale(1.08);
+}
+
+.add-panel-toggle.active {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(12px);
+  transform: rotate(45deg);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.add-panel-toggle .add-icon {
+  display: block;
+  line-height: 1;
+}
+
+.add-panel-dropdown {
+  position: absolute;
+  bottom: 60px;
+  left: 0;
+  width: 260px;
+  background: rgba(25, 25, 30, 0.96);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  animation: fadeIn 0.15s ease;
+}
+
+.add-panel-section {
+  margin-bottom: 8px;
+}
+
+.add-panel-section:last-child {
+  margin-bottom: 0;
+}
+
+.add-panel-title {
+  font-size: 10px;
+  font-weight: 700;
+  color: #808080;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  padding: 4px 8px 6px;
+}
+
+.add-panel-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+}
+
+.add-panel-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  color: #c0c0c0;
+  font-size: 12px;
+  cursor: grab;
+  transition: all 0.12s ease;
+}
+
+.add-panel-item:hover {
+  background: rgba(0, 120, 255, 0.18);
+  border-color: rgba(0, 120, 255, 0.35);
+  color: #ffffff;
+}
+
+.add-panel-item:active {
+  cursor: grabbing;
+}
+
+.add-panel-item.light-item {
+  background: rgba(251, 191, 36, 0.06);
+  border-color: rgba(251, 191, 36, 0.12);
+}
+
+.add-panel-item.light-item:hover {
+  background: rgba(251, 191, 36, 0.2);
+  border-color: rgba(251, 191, 36, 0.4);
+  color: #fbbf24;
+}
+
+.add-panel-icon {
+  font-size: 16px;
+  width: 22px;
+  text-align: center;
+}
+
+.add-panel-label {
+  font-size: 12px;
+  font-weight: 500;
+}

@@ -30,13 +30,35 @@ function PlayMode() {
   const mixerRef = useRef()
   const actionsRef = useRef({})
   const currentActionRef = useRef(null)
-  const [ready, setReady] = useState(false)
+  const cleanupRef = useRef(null)
 
   useEffect(() => {
+    let cancelled = false
     const loader = new GLTFLoader()
-    let modelScene = null
-    let mixer = null
-    let characterGroup = null
+
+    const cleanup = () => {
+      if (mixerRef.current) {
+        mixerRef.current.stopAllAction()
+        mixerRef.current = null
+      }
+      if (characterGroupRef.current) {
+        scene.remove(characterGroupRef.current)
+        characterGroupRef.current.traverse((child) => {
+          if (child.isMesh) {
+            if (child.geometry) child.geometry.dispose()
+            if (child.material) {
+              const mats = Array.isArray(child.material) ? child.material : [child.material]
+              mats.forEach((m) => m.dispose())
+            }
+          }
+        })
+        characterGroupRef.current = null
+      }
+      actionsRef.current = {}
+      currentActionRef.current = null
+    }
+
+    cleanupRef.current = cleanup
 
     const loadAll = async () => {
       const [modelGltf, idleGltf, jogGltf] = await Promise.all([
@@ -45,7 +67,11 @@ function PlayMode() {
         new Promise((resolve, reject) => loader.load(JOG_URL, resolve, undefined, reject)),
       ])
 
-      modelScene = modelGltf.scene
+      if (cancelled) return
+
+      cleanup()
+
+      const modelScene = modelGltf.scene
 
       modelScene.traverse((child) => {
         if (child.isMesh) {
@@ -54,7 +80,7 @@ function PlayMode() {
         }
       })
 
-      characterGroup = new THREE.Group()
+      const characterGroup = new THREE.Group()
       characterGroup.add(modelScene)
 
       const spawnPos = getSpawnPosition()
@@ -63,7 +89,7 @@ function PlayMode() {
 
       scene.add(characterGroup)
 
-      mixer = new THREE.AnimationMixer(modelScene)
+      const mixer = new THREE.AnimationMixer(modelScene)
       mixerRef.current = mixer
 
       const idleClip = idleGltf.animations[0]
@@ -84,26 +110,13 @@ function PlayMode() {
       }
 
       characterGroupRef.current = characterGroup
-      setReady(true)
     }
 
     loadAll().catch(console.error)
 
     return () => {
-      if (mixer) mixer.stopAllAction()
-      if (characterGroup) {
-        scene.remove(characterGroup)
-        characterGroup.traverse((child) => {
-          if (child.geometry) child.geometry.dispose()
-          if (child.material) {
-            if (Array.isArray(child.material)) {
-              child.material.forEach((m) => m.dispose())
-            } else {
-              child.material.dispose()
-            }
-          }
-        })
-      }
+      cancelled = true
+      cleanup()
     }
   }, [scene, getSpawnPosition])
 
@@ -115,12 +128,8 @@ function PlayMode() {
     distanceRef.current = 8
     targetRotationRef.current = Math.PI
 
-    const onKeyDown = (e) => {
-      keysRef.current[e.code] = true
-    }
-    const onKeyUp = (e) => {
-      keysRef.current[e.code] = false
-    }
+    const onKeyDown = (e) => { keysRef.current[e.code] = true }
+    const onKeyUp = (e) => { keysRef.current[e.code] = false }
     const onMouseDown = (e) => {
       if (e.button === 2) {
         isRightDragRef.current = true
@@ -129,9 +138,7 @@ function PlayMode() {
       }
     }
     const onMouseUp = (e) => {
-      if (e.button === 2) {
-        isRightDragRef.current = false
-      }
+      if (e.button === 2) { isRightDragRef.current = false }
     }
     const onMouseMove = (e) => {
       if (!isRightDragRef.current) return
@@ -140,21 +147,15 @@ function PlayMode() {
       lastMouseRef.current = { x: e.clientX, y: e.clientY }
       yawRef.current -= dx * MOUSE_SENSITIVITY
       pitchRef.current = THREE.MathUtils.clamp(
-        pitchRef.current - dy * MOUSE_SENSITIVITY,
-        -1.2,
-        1.2
+        pitchRef.current - dy * MOUSE_SENSITIVITY, -1.2, 1.2
       )
     }
     const onWheel = (e) => {
       distanceRef.current = THREE.MathUtils.clamp(
-        distanceRef.current + e.deltaY * 0.01,
-        2,
-        20
+        distanceRef.current + e.deltaY * 0.01, 2, 20
       )
     }
-    const onContextMenu = (e) => {
-      e.preventDefault()
-    }
+    const onContextMenu = (e) => { e.preventDefault() }
 
     const el = gl.domElement
     window.addEventListener('keydown', onKeyDown)

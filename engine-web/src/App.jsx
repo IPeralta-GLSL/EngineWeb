@@ -3,6 +3,7 @@ import Scene from './components/Scene'
 import Toolbar from './components/Toolbar'
 import HierarchyPanel from './components/HierarchyPanel'
 import PropertiesPanel from './components/PropertiesPanel'
+import AddObjectPanel from './components/AddObjectPanel'
 import './App.css'
 
 export default function App() {
@@ -14,6 +15,7 @@ export default function App() {
       <Toolbar />
       <HierarchyPanel />
       <PropertiesPanel />
+      <AddObjectPanel />
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React from 'react'
 import useEditorStore from '../store/editorStore'
 import { OBJECT_ICONS } from '../utils/constants'
 
@@ -27,10 +27,10 @@ export default function PropertiesPanel() {
         ) : (
           <div className="no-selection">
             <p className="hint">Selecciona un objeto</p>
+            <p className="hint-small">Usa el botón + para agregar</p>
           </div>
         )}
       </div>
-      <AddObjectMenu addObject={addObject} />
     </div>
   )
 }
@@ -165,72 +165,3 @@ function Vector3Input({ label, value, onChange, min }) {
   )
 }
 
-function AddObjectMenu({ addObject }) {
-  const [isOpen, setIsOpen] = useState(false)
-
-  const items = [
-    { type: 'box', icon: '▣', label: 'Cubo' },
-    { type: 'sphere', icon: '●', label: 'Esfera' },
-    { type: 'cylinder', icon: '●', label: 'Cilindro' },
-    { type: 'cone', icon: '▲', label: 'Cono' },
-    { type: 'torus', icon: '◎', label: 'Torus' },
-    { type: 'capsule', icon: '●', label: 'Cápsula' },
-  ]
-
-  const lightItems = [
-    { type: 'directionalLight', icon: '☀', label: 'Direccional' },
-    { type: 'pointLight', icon: '💡', label: 'Puntual' },
-  ]
-
-  const handleDragStart = (e, type) => {
-    e.dataTransfer.setData('objectType', type)
-    e.dataTransfer.effectAllowed = 'copy'
-  }
-
-  return (
-    <div className="add-object-section">
-      <button className="add-btn" onClick={() => setIsOpen(!isOpen)}>
-        + Agregar Objeto
-      </button>
-      {isOpen && (
-        <div className="add-menu">
-          {items.map((item) => (
-            <button
-              key={item.type}
-              className="add-menu-item"
-              draggable
-              onDragStart={(e) => handleDragStart(e, item.type)}
-              onClick={() => {
-                addObject(item.type)
-                setIsOpen(false)
-              }}
-              title="Click: crear aquí | Drag: soltar en escena"
-            >
-              <span className="drag-handle">⋮⋮</span>
-              <span>{item.icon}</span>
-              <span>{item.label}</span>
-            </button>
-          ))}
-          <div className="add-menu-divider">Luces</div>
-          {lightItems.map((item) => (
-            <button
-              key={item.type}
-              className="add-menu-item light-item"
-              draggable
-              onDragStart={(e) => handleDragStart(e, item.type)}
-              onClick={() => {
-                addObject(item.type)
-                setIsOpen(false)
-              }}
-              title="Click: crear aquí | Drag: soltar en escena"
-            >
-              <span className="drag-handle">⋮⋮</span>
-              <span>{item.icon}</span>
-              <span>{item.label}</span>
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  )
-}
