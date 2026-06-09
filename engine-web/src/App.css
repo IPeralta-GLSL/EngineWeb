@@ -354,8 +354,7 @@ body {
 }
 
 .add-object-section {
-  margin-top: 16px;
-  padding-top: 12px;
+  padding: 10px;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
@@ -378,7 +377,7 @@ body {
 }
 
 .add-menu {
-  margin-top: 6px;
+  margin-top: 8px;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 4px;
@@ -388,13 +387,13 @@ body {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 8px;
+  padding: 8px 8px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 6px;
   color: #c0c0c0;
   font-size: 12px;
-  cursor: pointer;
+  cursor: grab;
   transition: all 0.12s ease;
 }
 
@@ -402,6 +401,44 @@ body {
   background: rgba(0, 120, 255, 0.15);
   border-color: rgba(0, 120, 255, 0.3);
   color: #ffffff;
+}
+
+.add-menu-item:active {
+  cursor: grabbing;
+}
+
+.add-menu-item.light-item {
+  background: rgba(251, 191, 36, 0.08);
+  border-color: rgba(251, 191, 36, 0.15);
+}
+
+.add-menu-item.light-item:hover {
+  background: rgba(251, 191, 36, 0.2);
+  border-color: rgba(251, 191, 36, 0.4);
+  color: #fbbf24;
+}
+
+.drag-handle {
+  font-size: 10px;
+  color: #606060;
+  cursor: grab;
+}
+
+.add-menu-item:hover .drag-handle {
+  color: #a0a0a0;
+}
+
+.add-menu-divider {
+  grid-column: 1 / -1;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 600;
+  color: #fbbf24;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 6px 0 2px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  margin-top: 4px;
 }
 
 .no-selection {

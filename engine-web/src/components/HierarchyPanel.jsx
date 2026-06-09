@@ -11,6 +11,8 @@ export default function HierarchyPanel() {
 
   if (mode !== 'edit') return null
 
+  const isProtected = (id) => id === 'platform' || id === 'spawn'
+
   return (
     <div className="panel hierarchy-panel">
       <div className="panel-header">
@@ -27,7 +29,7 @@ export default function HierarchyPanel() {
               {OBJECT_ICONS[obj.type] || '●'}
             </span>
             <span className="hierarchy-name">{obj.name}</span>
-            {obj.id !== 'platform' && (
+            {!isProtected(obj.id) && (
               <button
                 className="delete-btn"
                 onClick={(e) => {

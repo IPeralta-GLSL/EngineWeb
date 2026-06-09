@@ -1,11 +1,11 @@
 import React, { useRef, useEffect, useCallback } from 'react'
-import { Canvas, useFrame, useThree } from '@react-three/fiber'
+import { Canvas, useThree, useFrame } from '@react-three/fiber'
 import { Sky, OrbitControls, TransformControls, Edges } from '@react-three/drei'
 import * as THREE from 'three'
 import useEditorStore from '../store/editorStore'
 import ThirdPersonController from './ThirdPersonController'
 
-function SceneObject({ obj }) {
+function SpawnObject({ obj }) {
   const meshRef = useRef()
   const mode = useEditorStore((s) => s.mode)
   const selectedObjectId = useEditorStore((s) => s.selectedObjectId)
@@ -15,9 +15,7 @@ function SceneObject({ obj }) {
   const handleClick = useCallback(
     (e) => {
       e.stopPropagation()
-      if (mode === 'edit') {
-        selectObject(obj.id)
-      }
+      if (mode === 'edit') selectObject(obj.id)
     },
     [mode, obj.id, selectObject]
   )
@@ -25,10 +23,165 @@ function SceneObject({ obj }) {
   useEffect(() => {
     if (meshRef.current) {
       meshRef.current.position.set(...obj.position)
-      meshRef.current.rotation.set(...obj.rotation)
-      meshRef.current.scale.set(...obj.scale)
     }
-  }, [obj.position, obj.rotation, obj.scale])
+  }, [obj.position])
+
+  const ref = useRef()
+
+  return (
+    <group position={obj.position} onClick={handleClick}>
+      <mesh ref={ref} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[0.3, 0.5, 32]} />
+        <meshBasicMaterial
+          color={obj.color}
+          transparent
+          opacity={0.7}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
+        <ringGeometry args={[0.6, 0.65, 32]} />
+        <meshBasicMaterial
+          color={obj.color}
+          transparent
+          opacity={0.3}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+      <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[0.2, 16]} />
+        <meshBasicMaterial color="#ffffff" transparent opacity={0.9} />
+      </mesh>
+      <pointLight color={obj.color} intensity={0.5} distance={3} />
+      {isSelected && mode === 'edit' && (
+        <Edges threshold={15} color="#00bfff" lineWidth={2} />
+      )}
+    </group>
+  )
+}
+
+function DirectionalLightObject({ obj }) {
+  const mode = useEditorStore((s) => s.mode)
+  const selectedObjectId = useEditorStore((s) => s.selectedObjectId)
+  const selectObject = useEditorStore((s) => s.selectObject)
+  const isSelected = selectedObjectId === obj.id
+
+  const handleClick = useCallback(
+    (e) => {
+      e.stopPropagation()
+      if (mode === 'edit') selectObject(obj.id)
+    },
+    [mode, obj.id, selectObject]
+  )
+
+  return (
+    <group position={obj.position} onClick={handleClick}>
+      <directionalLight
+        color={obj.color}
+        intensity={obj.intensity || 2}
+        position={[0, 0, 0]}
+        castShadow
+        shadow-mapSize-width={2048}
+        shadow-mapSize-height={2048}
+        shadow-camera-far={50}
+        shadow-camera-left={-20}
+        shadow-camera-right={20}
+        shadow-camera-top={20}
+        shadow-camera-bottom={-20}
+      />
+      <mesh position={[0, 0, 0]}>
+        <sphereGeometry args={[0.15, 16, 16]} />
+        <meshBasicMaterial color={obj.color} wireframe />
+      </mesh>
+      <mesh position={[0, -0.5, 0]}>
+        <coneGeometry args={[0.08, 0.3, 4]} />
+        <meshBasicMaterial color={obj.color} />
+      </mesh>
+      <mesh position={[0, 0.5, 0]}>
+        <coneGeometry args={[0.08, 0.3, 4]} />
+        <meshBasicMaterial color={obj.color} />
+      </mesh>
+      {isSelected && mode === 'edit' && (
+        <mesh>
+          <sphereGeometry args={[0.25, 16, 16]} />
+          <meshBasicMaterial
+            color="#00bfff"
+            wireframe
+            transparent
+            opacity={0.5}
+          />
+        </mesh>
+      )}
+    </group>
+  )
+}
+
+function PointLightObject({ obj }) {
+  const mode = useEditorStore((s) => s.mode)
+  const selectedObjectId = useEditorStore((s) => s.selectedObjectId)
+  const selectObject = useEditorStore((s) => s.selectObject)
+  const isSelected = selectedObjectId === obj.id
+
+  const handleClick = useCallback(
+    (e) => {
+      e.stopPropagation()
+      if (mode === 'edit') selectObject(obj.id)
+    },
+    [mode, obj.id, selectObject]
+  )
+
+  return (
+    <group position={obj.position} onClick={handleClick}>
+      <pointLight
+        color={obj.color}
+        intensity={obj.intensity || 5}
+        distance={15}
+        castShadow
+      />
+      <mesh>
+        <sphereGeometry args={[0.15, 16, 16]} />
+        <meshBasicMaterial color={obj.color} />
+      </mesh>
+      <mesh>
+        <sphereGeometry args={[0.4, 16, 16]} />
+        <meshBasicMaterial
+          color={obj.color}
+          transparent
+          opacity={0.15}
+          wireframe
+        />
+      </mesh>
+      {isSelected && mode === 'edit' && (
+        <mesh>
+          <sphereGeometry args={[0.55, 16, 16]} />
+          <meshBasicMaterial
+            color="#00bfff"
+            wireframe
+            transparent
+            opacity={0.5}
+          />
+        </mesh>
+      )}
+    </group>
+  )
+}
+
+function SceneObject({ obj }) {
+  const meshRef = useRef()
+  const mode = useEditorStore((s) => s.mode)
+  const selectedObjectId = useEditorStore((s) => s.selectedObjectId)
+  const selectObject = useEditorStore((s) => s.selectObject)
+  const updateObject = useEditorStore((s) => s.updateObject)
+  const transformMode = useEditorStore((s) => s.transformMode)
+  const isSelected = selectedObjectId === obj.id
+
+  const handleClick = useCallback(
+    (e) => {
+      e.stopPropagation()
+      if (mode === 'edit') selectObject(obj.id)
+    },
+    [mode, obj.id, selectObject]
+  )
 
   const geometryMap = {
     box: <boxGeometry args={[1, 1, 1]} />,
@@ -39,9 +192,12 @@ function SceneObject({ obj }) {
     capsule: <capsuleGeometry args={[0.3, 0.6, 16, 32]} />,
   }
 
-  return (
+  const mesh = (
     <mesh
       ref={meshRef}
+      position={obj.position}
+      rotation={obj.rotation}
+      scale={obj.scale}
       onClick={handleClick}
       castShadow
       receiveShadow
@@ -58,67 +214,80 @@ function SceneObject({ obj }) {
       )}
     </mesh>
   )
+
+  if (isSelected && mode === 'edit' && meshRef) {
+    return (
+      <TransformControlsWrapper
+        meshRef={meshRef}
+        mode={transformMode}
+        obj={obj}
+        updateObject={updateObject}
+      >
+        {mesh}
+      </TransformControlsWrapper>
+    )
+  }
+
+  return mesh
 }
 
-function GizmoManager() {
-  const mode = useEditorStore((s) => s.mode)
-  const transformMode = useEditorStore((s) => s.transformMode)
-  const selectedObjectId = useEditorStore((s) => s.selectedObjectId)
-  const updateObject = useEditorStore((s) => s.updateObject)
-  const sceneObjects = useEditorStore((s) => s.sceneObjects)
-  const { scene } = useThree()
-  const controlsRef = useRef()
-  const objRef = useRef()
+function TransformControlsWrapper({ meshRef, mode, obj, updateObject, children }) {
+  const tcRef = useRef()
 
-  useEffect(() => {
-    if (!controlsRef.current) return
-    const ctrl = controlsRef.current
-
-    const onDraggingChanged = (event) => {
-      if (event.value === false && objRef.current) {
-        const mesh = objRef.current
-        const selectedObj = sceneObjects.find((o) => o.id === selectedObjectId)
-        if (!selectedObj) return
-        updateObject(selectedObj.id, {
-          position: [mesh.position.x, mesh.position.y, mesh.position.z],
-          rotation: [mesh.rotation.x, mesh.rotation.y, mesh.rotation.z],
-          scale: [mesh.scale.x, mesh.scale.y, mesh.scale.z],
-        })
-      }
-    }
-
-    ctrl.addEventListener('dragging-changed', onDraggingChanged)
-    return () => ctrl.removeEventListener('dragging-changed', onDraggingChanged)
-  }, [selectedObjectId, sceneObjects, updateObject])
-
-  useEffect(() => {
-    objRef.current = null
-    if (mode !== 'edit' || !selectedObjectId) return
-
-    scene.traverse((child) => {
-      if (child.isMesh && child.userData?.objectId === selectedObjectId) {
-        objRef.current = child
-      }
+  const onPointerUp = useCallback(() => {
+    if (!tcRef.current || !meshRef.current) return
+    const m = meshRef.current
+    updateObject(obj.id, {
+      position: [m.position.x, m.position.y, m.position.z],
+      rotation: [m.rotation.x, m.rotation.y, m.rotation.z],
+      scale: [m.scale.x, m.scale.y, m.scale.z],
     })
-
-    if (controlsRef.current && objRef.current) {
-      controlsRef.current.attach(objRef.current)
-    }
-
-    return () => {
-      if (controlsRef.current) {
-        controlsRef.current.detach()
-      }
-    }
-  }, [mode, selectedObjectId, scene])
-
-  if (mode !== 'edit' || !selectedObjectId) return null
+  }, [obj.id, updateObject, meshRef])
 
   return (
     <TransformControls
-      ref={controlsRef}
-      mode={transformMode}
-    />
+      ref={tcRef}
+      mode={mode}
+      onPointerUp={onPointerUp}
+      onMouseUp={onPointerUp}
+      object={meshRef.current || undefined}
+    >
+      {children}
+    </TransformControls>
+  )
+}
+
+function SpawnMarker() {
+  const mode = useEditorStore((s) => s.mode)
+  const getSpawnPosition = useEditorStore((s) => s.getSpawnPosition)
+  const selectObject = useEditorStore((s) => s.selectObject)
+  const selectedObjectId = useEditorStore((s) => s.selectedObjectId)
+  const spawn = useEditorStore((s) => s.sceneObjects.find((o) => o.type === 'spawn'))
+
+  if (!spawn) return null
+
+  const isSelected = selectedObjectId === spawn.id
+
+  return (
+    <SpawnObject obj={spawn} />
+  )
+}
+
+function LightRenderers() {
+  const sceneObjects = useEditorStore((s) => s.sceneObjects)
+
+  return (
+    <>
+      {sceneObjects.map((obj) => {
+        if (obj.type === 'directionalLight') {
+          return <DirectionalLightObject key={obj.id} obj={obj} />
+        }
+        if (obj.type === 'pointLight') {
+          return <PointLightObject key={obj.id} obj={obj} />
+        }
+        return null
+      })}
+    </>
   )
 }
 
@@ -126,18 +295,6 @@ function Lights() {
   return (
     <>
       <ambientLight intensity={0.3} />
-      <directionalLight
-        position={[10, 15, 10]}
-        intensity={1.2}
-        castShadow
-        shadow-mapSize-width={2048}
-        shadow-mapSize-height={2048}
-        shadow-camera-far={60}
-        shadow-camera-left={-30}
-        shadow-camera-right={30}
-        shadow-camera-top={30}
-        shadow-camera-bottom={-30}
-      />
       <hemisphereLight args={['#87ceeb', '#362312', 0.4]} />
     </>
   )
@@ -147,18 +304,19 @@ function SceneObjects() {
   const sceneObjects = useEditorStore((s) => s.sceneObjects)
   return (
     <>
-      {sceneObjects.map((obj) => (
-        <SceneObject key={obj.id} obj={obj} />
-      ))}
+      {sceneObjects.map((obj) => {
+        if (obj.type === 'spawn') return null
+        if (obj.type === 'directionalLight') return null
+        if (obj.type === 'pointLight') return null
+        return <SceneObject key={obj.id} obj={obj} />
+      })}
     </>
   )
 }
 
 function EditorCamera() {
   const mode = useEditorStore((s) => s.mode)
-
   if (mode !== 'edit') return null
-
   return (
     <OrbitControls
       makeDefault
@@ -174,6 +332,55 @@ function EditorCamera() {
   )
 }
 
+function DropHandler() {
+  const { camera, raycaster } = useThree()
+  const addObject = useEditorStore((s) => s.addObject)
+
+  const onDrop = useCallback(
+    (e) => {
+      e.preventDefault()
+      const objectType = e.dataTransfer.getData('objectType')
+      if (!objectType) return
+
+      const rect = e.target.getBoundingClientRect()
+      const mouse = new THREE.Vector2(
+        ((e.clientX - rect.left) / rect.width) * 2 - 1,
+        -((e.clientY - rect.top) / rect.height) * 2 + 1
+      )
+      raycaster.setFromCamera(mouse, camera)
+
+      const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0)
+      const intersection = new THREE.Vector3()
+      raycaster.ray.intersectPlane(plane, intersection)
+
+      if (intersection) {
+        const pos = [intersection.x, 0.5, intersection.z]
+        addObject(objectType, pos)
+      }
+    },
+    [camera, raycaster, addObject]
+  )
+
+  const onDragOver = useCallback((e) => {
+    e.preventDefault()
+  }, [])
+
+  const canvasRef = useRef()
+
+  useEffect(() => {
+    const canvas = document.querySelector('.viewport canvas')
+    if (!canvas) return
+    canvas.addEventListener('drop', onDrop)
+    canvas.addEventListener('dragover', onDragOver)
+    return () => {
+      canvas.removeEventListener('drop', onDrop)
+      canvas.removeEventListener('dragover', onDragOver)
+    }
+  }, [onDrop, onDragOver])
+
+  return null
+}
+
 function SceneContent() {
   return (
     <>
@@ -187,11 +394,18 @@ function SceneContent() {
         rayleigh={2}
       />
       <SceneObjects />
+      <LightRenderers />
+      <SpawnMarker />
       <GizmoManager />
       <ThirdPersonController />
       <EditorCamera />
+      <DropHandler />
     </>
   )
+}
+
+function GizmoManager() {
+  return null
 }
 
 export default function Scene() {

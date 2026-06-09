@@ -1,6 +1,6 @@
-import React from 'react'
+import React, { useState } from 'react'
 import useEditorStore from '../store/editorStore'
-import { OBJECT_TYPES } from '../utils/constants'
+import { OBJECT_ICONS } from '../utils/constants'
 
 export default function PropertiesPanel() {
   const mode = useEditorStore((s) => s.mode)
@@ -20,14 +20,17 @@ export default function PropertiesPanel() {
       </div>
       <div className="panel-content">
         {selectedObj ? (
-          <SelectedObjectProperties obj={selectedObj} updateObject={updateObject} />
+          <SelectedObjectProperties
+            obj={selectedObj}
+            updateObject={updateObject}
+          />
         ) : (
           <div className="no-selection">
             <p className="hint">Selecciona un objeto</p>
-            <AddObjectMenu addObject={addObject} />
           </div>
         )}
       </div>
+      <AddObjectMenu addObject={addObject} />
     </div>
   )
 }
@@ -59,6 +62,14 @@ function SelectedObjectProperties({ obj, updateObject }) {
     updateObject(obj.id, { color: e.target.value })
   }
 
+  const handleIntensityChange = (e) => {
+    updateObject(obj.id, { intensity: parseFloat(e.target.value) || 0 })
+  }
+
+  const isLight = obj.type === 'directionalLight' || obj.type === 'pointLight'
+  const isSpawn = obj.type === 'spawn'
+  const isGeometry = !isLight && !isSpawn
+
   return (
     <div className="properties-content">
       <div className="prop-group">
@@ -72,8 +83,24 @@ function SelectedObjectProperties({ obj, updateObject }) {
 
       <div className="prop-group">
         <label className="prop-label">Tipo</label>
-        <span className="prop-value">{OBJECT_TYPES[obj.type] || obj.type}</span>
+        <span className="prop-value">
+          {OBJECT_ICONS[obj.type] || '●'} {obj.type}
+        </span>
       </div>
+
+      {isLight && (
+        <div className="prop-group">
+          <label className="prop-label">Intensidad</label>
+          <input
+            type="number"
+            className="prop-input number-input"
+            value={obj.intensity || 1}
+            onChange={handleIntensityChange}
+            step={0.5}
+            min={0}
+          />
+        </div>
+      )}
 
       <div className="prop-group">
         <label className="prop-label">Color</label>
@@ -91,20 +118,21 @@ function SelectedObjectProperties({ obj, updateObject }) {
         onChange={handlePositionChange}
       />
 
-      <Vector3Input
-        label="Rotación"
-        value={obj.rotation}
-        onChange={handleRotationChange}
-      />
-
-      <Vector3Input
-        label="Escala"
-        value={obj.scale}
-        onChange={handleScaleChange}
-        min={0.01}
-      />
-
-      <AddObjectMenu addObject={(type) => addObject(type)} />
+      {isGeometry && (
+        <>
+          <Vector3Input
+            label="Rotación"
+            value={obj.rotation}
+            onChange={handleRotationChange}
+          />
+          <Vector3Input
+            label="Escala"
+            value={obj.scale}
+            onChange={handleScaleChange}
+            min={0.01}
+          />
+        </>
+      )}
     </div>
   )
 }
@@ -119,7 +147,9 @@ function Vector3Input({ label, value, onChange, min }) {
       <div className="vector3-inputs">
         {axes.map((axis, i) => (
           <div key={axis} className="vector3-axis">
-            <span className="axis-label" style={{ color: colors[i] }}>{axis}</span>
+            <span className="axis-label" style={{ color: colors[i] }}>
+              {axis}
+            </span>
             <input
               type="number"
               className="prop-input number-input"
@@ -136,7 +166,7 @@ function Vector3Input({ label, value, onChange, min }) {
 }
 
 function AddObjectMenu({ addObject }) {
-  const [isOpen, setIsOpen] = React.useState(false)
+  const [isOpen, setIsOpen] = useState(false)
 
   const items = [
     { type: 'box', icon: '▣', label: 'Cubo' },
@@ -146,6 +176,16 @@ function AddObjectMenu({ addObject }) {
     { type: 'torus', icon: '◎', label: 'Torus' },
     { type: 'capsule', icon: '●', label: 'Cápsula' },
   ]
+
+  const lightItems = [
+    { type: 'directionalLight', icon: '☀', label: 'Direccional' },
+    { type: 'pointLight', icon: '💡', label: 'Puntual' },
+  ]
+
+  const handleDragStart = (e, type) => {
+    e.dataTransfer.setData('objectType', type)
+    e.dataTransfer.effectAllowed = 'copy'
+  }
 
   return (
     <div className="add-object-section">
@@ -158,11 +198,33 @@ function AddObjectMenu({ addObject }) {
             <button
               key={item.type}
               className="add-menu-item"
+              draggable
+              onDragStart={(e) => handleDragStart(e, item.type)}
               onClick={() => {
                 addObject(item.type)
                 setIsOpen(false)
               }}
+              title="Click: crear aquí | Drag: soltar en escena"
             >
+              <span className="drag-handle">⋮⋮</span>
+              <span>{item.icon}</span>
+              <span>{item.label}</span>
+            </button>
+          ))}
+          <div className="add-menu-divider">Luces</div>
+          {lightItems.map((item) => (
+            <button
+              key={item.type}
+              className="add-menu-item light-item"
+              draggable
+              onDragStart={(e) => handleDragStart(e, item.type)}
+              onClick={() => {
+                addObject(item.type)
+                setIsOpen(false)
+              }}
+              title="Click: crear aquí | Drag: soltar en escena"
+            >
+              <span className="drag-handle">⋮⋮</span>
               <span>{item.icon}</span>
               <span>{item.label}</span>
             </button>
