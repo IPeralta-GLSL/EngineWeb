@@ -4,6 +4,7 @@ import { Sky, TransformControls, Edges } from '@react-three/drei'
 import * as THREE from 'three'
 import useEditorStore from '../store/editorStore'
 import CameraController from './CameraController'
+import ViewportGizmoWidget from './ViewportGizmo'
 
 function SpawnObject({ obj }) {
   const mode = useEditorStore((s) => s.mode)
@@ -225,23 +226,28 @@ function SceneObject({ obj }) {
 function TransformControlsWrapper({ meshRef, mode, obj, updateObject, children }) {
   const tcRef = useRef()
 
-  const onPointerUp = useCallback(() => {
-    if (!tcRef.current || !meshRef.current) return
-    const m = meshRef.current
-    updateObject(obj.id, {
-      position: [m.position.x, m.position.y, m.position.z],
-      rotation: [m.rotation.x, m.rotation.y, m.rotation.z],
-      scale: [m.scale.x, m.scale.y, m.scale.z],
-    })
+  useEffect(() => {
+    const ctrl = tcRef.current
+    if (!ctrl) return
+
+    const onObjectChange = () => {
+      if (!meshRef.current) return
+      const m = meshRef.current
+      updateObject(obj.id, {
+        position: [m.position.x, m.position.y, m.position.z],
+        rotation: [m.rotation.x, m.rotation.y, m.rotation.z],
+        scale: [m.scale.x, m.scale.y, m.scale.z],
+      })
+    }
+
+    ctrl.addEventListener('objectChange', onObjectChange)
+    return () => ctrl.removeEventListener('objectChange', onObjectChange)
   }, [obj.id, updateObject, meshRef])
 
   return (
     <TransformControls
       ref={tcRef}
       mode={mode}
-      onPointerUp={onPointerUp}
-      onMouseUp={onPointerUp}
-      object={meshRef.current || undefined}
     >
       {children}
     </TransformControls>
@@ -351,6 +357,7 @@ function SceneContent() {
       <SceneObjects />
       <LightRenderers />
       <CameraController />
+      <ViewportGizmoWidget />
       <DropHandler />
     </>
   )
