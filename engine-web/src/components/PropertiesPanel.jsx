@@ -7,7 +7,6 @@ export default function PropertiesPanel() {
   const sceneObjects = useEditorStore((s) => s.sceneObjects)
   const selectedObjectId = useEditorStore((s) => s.selectedObjectId)
   const updateObject = useEditorStore((s) => s.updateObject)
-  const addObject = useEditorStore((s) => s.addObject)
 
   if (mode !== 'edit') return null
 
@@ -20,10 +19,7 @@ export default function PropertiesPanel() {
       </div>
       <div className="panel-content">
         {selectedObj ? (
-          <SelectedObjectProperties
-            obj={selectedObj}
-            updateObject={updateObject}
-          />
+          <SelectedObjectProperties obj={selectedObj} updateObject={updateObject} />
         ) : (
           <div className="no-selection">
             <p className="hint">Selecciona un objeto</p>
@@ -66,26 +62,26 @@ function SelectedObjectProperties({ obj, updateObject }) {
     updateObject(obj.id, { intensity: parseFloat(e.target.value) || 0 })
   }
 
+  const handlePhysicsToggle = (e) => {
+    updateObject(obj.id, { hasPhysics: e.target.checked })
+  }
+
   const isLight = obj.type === 'directionalLight' || obj.type === 'pointLight'
+  const isDirectionalLight = obj.type === 'directionalLight'
   const isSpawn = obj.type === 'spawn'
   const isGeometry = !isLight && !isSpawn
+  const hasPhysicsOption = isGeometry || obj.type === 'box'
 
   return (
     <div className="properties-content">
       <div className="prop-group">
         <label className="prop-label">Nombre</label>
-        <input
-          className="prop-input"
-          value={obj.name}
-          onChange={handleNameChange}
-        />
+        <input className="prop-input" value={obj.name} onChange={handleNameChange} />
       </div>
 
       <div className="prop-group">
         <label className="prop-label">Tipo</label>
-        <span className="prop-value">
-          {OBJECT_ICONS[obj.type] || '●'} {obj.type}
-        </span>
+        <span className="prop-value">{OBJECT_ICONS[obj.type] || '●'} {obj.type}</span>
       </div>
 
       {isLight && (
@@ -104,13 +100,22 @@ function SelectedObjectProperties({ obj, updateObject }) {
 
       <div className="prop-group">
         <label className="prop-label">Color</label>
-        <input
-          type="color"
-          className="prop-color"
-          value={obj.color}
-          onChange={handleColorChange}
-        />
+        <input type="color" className="prop-color" value={obj.color} onChange={handleColorChange} />
       </div>
+
+      {hasPhysicsOption && (
+        <div className="prop-group prop-toggle-group">
+          <label className="prop-label">Físicas</label>
+          <label className="toggle-switch">
+            <input
+              type="checkbox"
+              checked={obj.hasPhysics !== false}
+              onChange={handlePhysicsToggle}
+            />
+            <span className="toggle-slider"></span>
+          </label>
+        </div>
+      )}
 
       <Vector3Input
         label="Posición"
@@ -118,20 +123,21 @@ function SelectedObjectProperties({ obj, updateObject }) {
         onChange={handlePositionChange}
       />
 
+      {(isGeometry || isDirectionalLight) && (
+        <Vector3Input
+          label="Rotación"
+          value={obj.rotation}
+          onChange={handleRotationChange}
+        />
+      )}
+
       {isGeometry && (
-        <>
-          <Vector3Input
-            label="Rotación"
-            value={obj.rotation}
-            onChange={handleRotationChange}
-          />
-          <Vector3Input
-            label="Escala"
-            value={obj.scale}
-            onChange={handleScaleChange}
-            min={0.01}
-          />
-        </>
+        <Vector3Input
+          label="Escala"
+          value={obj.scale}
+          onChange={handleScaleChange}
+          min={0.01}
+        />
       )}
     </div>
   )
@@ -147,9 +153,7 @@ function Vector3Input({ label, value, onChange, min }) {
       <div className="vector3-inputs">
         {axes.map((axis, i) => (
           <div key={axis} className="vector3-axis">
-            <span className="axis-label" style={{ color: colors[i] }}>
-              {axis}
-            </span>
+            <span className="axis-label" style={{ color: colors[i] }}>{axis}</span>
             <input
               type="number"
               className="prop-input number-input"
@@ -164,4 +168,3 @@ function Vector3Input({ label, value, onChange, min }) {
     </div>
   )
 }
-
